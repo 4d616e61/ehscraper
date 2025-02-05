@@ -70,14 +70,14 @@ export function parse_page(page: string) : ParsedPage {
   let prev = -1, next = -1;
   //match prev/next urls
   if (prev_url != null) {
-    const prev_match = prev_url.match("prev=([1-9]+)");
+    const prev_match = prev_url.match("prev=([0-9]+)");
     assert(prev_match != null && prev_match.length == 2);
     prev = +prev_match[2];
   }
 
   const next_url = searchnav?.children[4].children[0].getAttribute("href");
   if (next_url != null) {
-    const next_match = next_url.match("next=([1-9]+)");
+    const next_match = next_url.match("next=([0-9]+)");
     assert(next_match != null && next_match.length == 2);
     next = +next_match[1];
   }

@@ -29,7 +29,6 @@ if (import.meta.main) {
     if (task == null) {
       break;
     }
-    scraper_norm.execute_pagination_task(task).catch();
     scraper_norm.execute_pagination_task(task);
     break;
   }
