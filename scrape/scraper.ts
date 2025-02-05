@@ -138,13 +138,26 @@ export class Scraper {
     }
   }
   public async query_loop() {
+    let attempts = 0;
+    const max_attempts = 10;
     while (true) {
       const query = this._syncdb.get_queries();
       if (query.length === 0) {
-        sleep(1000);
+        attempts++;
+        if (attempts >= max_attempts) {
+          console.log(
+            `No query tasks after ${max_attempts} tries. Exiting query loop.`,
+          );
+          return;
+        }
+        console.log(
+          `No query tasks available. Retrying after 1 second. Attempt ${attempts} of ${max_attempts}`,
+        );
+
+        await sleep(1000);
         continue;
       }
-
+      attempts = 0;
       await this.execute_api_query(query);
     }
   }

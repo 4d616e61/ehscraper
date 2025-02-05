@@ -25,24 +25,12 @@ if (import.meta.main) {
   );
   const ddb: DataDB = new DataDB("./datadb.db");
   const scraper_norm: Scraper = new Scraper(sdb, ddb, TaskType.NORM);
+  console.log("Getting current max gid: ");
   const max_gid = await scraper_norm.get_max_gid();
+  console.log(`GID: ${max_gid}`);
   sdb.max_id = max_gid;
   //const max_gid = 1000000;
-  while (true) {
-    const task = sdb.get_task(TaskType.NORM);
-
-    if (task === null) {
-      break;
-    }
-    scraper_norm.execute_pagination_task(task).catch(() => {
-      console.log("scraper failed :(");
-    });
-    break;
-  }
-  const api_q = sdb.get_queries();
-  if (api_q.length === 0) {
-    await sleep(10000000);
-  }
-  //scraper_norm.execute_api_query(api_q);
+  scraper_norm.pagination_loop();
+  scraper_norm.query_loop();
   await sleep(100000000);
 }
