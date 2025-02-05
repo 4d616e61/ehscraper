@@ -18,10 +18,6 @@ if (import.meta.main) {
   const sdb : SyncDB = new SyncDB("./syncdb.db")
   const ddb : DataDB = new DataDB("./datadb.db")
   const scraper_norm : Scraper = new Scraper(sdb, ddb)
-  const res = parse_page(Deno.readTextFileSync("./curl_response"))
-  for(const entry of res.entries) {
-    ddb.add_page_entry(entry)
-  }
   sdb.generate_tasks(16, 3090, 200)
   while( true ){
     const task = sdb.get_task(TaskType.NORM)
