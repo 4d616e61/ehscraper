@@ -23,17 +23,17 @@ if (import.meta.main) {
   const scraper_norm: Scraper = new Scraper(sdb, ddb);
   const max_gid = await scraper_norm.get_max_gid();
   //const max_gid = 1000000;
-  sdb.generate_tasks(16, max_gid, 5000);
+  sdb.generate_tasks(16, max_gid, 200);
   while (true) {
     const task = sdb.get_task(TaskType.NORM);
-    if (task == null) {
+    if (task === null) {
       break;
     }
-    scraper_norm.execute_pagination_task(task);
+    scraper_norm.execute_pagination_task(task).catch();
     break;
   }
   const api_q = sdb.get_queries();
-  if (api_q.length == 0) {
+  if (api_q.length === 0) {
     await sleep(10000000);
   }
   //scraper_norm.execute_api_query(api_q);

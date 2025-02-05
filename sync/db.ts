@@ -86,11 +86,11 @@ export class SyncDB {
     const res = this._db.prepare(
       `SELECT status_all FROM tasks WHERE status_all != ${S_FINISHED}`,
     ).all();
-    return res.length == 0;
+    return res.length === 0;
   }
   public generate_tasks(n_tasks: number, max_id: number, ids_per_task: number) {
     const res = this._db.prepare(`SELECT id FROM current_id`).all();
-    assert(res.length == 1);
+    assert(res.length === 1);
     //PROBABLY wont fail
     const cur_id: number = +res[0]["id"];
     const dst_id = cur_id + ids_per_task * n_tasks;
@@ -145,12 +145,12 @@ export class SyncDB {
       WHERE task_id = (
         SELECT min(t.task_id)
         FROM tasks t
-        where t.${task_name}=='${S_UNSYNCED}'
+        where t.${task_name}==='${S_UNSYNCED}'
       )
        RETURNING start, end`).all();
     //TODO: add logic for  completion check
     //if length 0 then there are probably no avail tasks
-    if (res.length == 0) {
+    if (res.length === 0) {
       return null;
     }
     //assert(res.length > 0)

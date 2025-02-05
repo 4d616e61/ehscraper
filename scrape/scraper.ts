@@ -49,10 +49,8 @@ export class Scraper {
     for (const do_expunged of expunged_iterator) {
       //sounds weird, but this goes from end to start
       let cur_next = task.end;
-      while(true) {
-
-        
-        console.log(`Expunged: ${do_expunged}`);
+      console.log(`Expunged: ${do_expunged}`);
+      while (true) {
         console.log(`Paginating from ${cur_next}`);
         //TODO: verify cookies
         const response = await this.make_page_request(cur_next, do_expunged);
@@ -60,10 +58,10 @@ export class Scraper {
         if (response.status != 200) {
           return Promise.reject(`Request failed with code ${response.status}`);
         }
-  
+
         const res_text: string = await response.text();
         const page = parse_page(res_text);
-  
+
         //save, parse results, etc etc
         //
         console.log(`Next: ${page.next}`);
@@ -72,15 +70,12 @@ export class Scraper {
           break;
         }
         //TODO: handle error
-  
+
         for (const entry of page.entries) {
           this._datadb.add_page_entry(entry);
           this._syncdb.add_page_entry(entry);
         }
-
       }
-
-
     }
     this._syncdb.resolve_task(task);
     console.log(`Resolved task: `);
@@ -90,7 +85,7 @@ export class Scraper {
   // deno-lint-ignore no-explicit-any
   public async execute_api_query(query: Array<any>) {
     assert(query.length > 0);
-    assert(query[0].length == 2);
+    assert(query[0].length === 2);
 
     const response = await fetch(this._api_endpoint, {
       method: "POST",

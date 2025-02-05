@@ -24,7 +24,7 @@ export function parse_page(page: string) : ParsedPage {
   for (const entry of entries_table) {
     const heuristic_attr = entry.children[0].getAttribute("class");
     //theres like a middle spacing thing here that fucks with this
-    if (heuristic_attr == "itd") {
+    if (heuristic_attr === "itd") {
       continue;
     }
     const entry_info = entry.children[1].children[0];
@@ -34,7 +34,7 @@ export function parse_page(page: string) : ParsedPage {
     const href_url = href_elem.getAttribute("href");
     //match gallery url id/token
     const href_match = href_url?.match("\/g\/([0-9]+)\/([0-9a-f]+)\/");
-    assert(href_match != null && href_match.length == 3);
+    assert(href_match != null && href_match.length === 3);
 
     const gid: number = +href_match[1];
     const token: string = href_match[2];
@@ -42,7 +42,7 @@ export function parse_page(page: string) : ParsedPage {
     //i hate this even more
     const table_start_div = href_elem.children[0].children[1];
     //edge case of no tags
-    const tags_table = table_start_div.children.length == 0
+    const tags_table = table_start_div.children.length === 0
       ? []
       : table_start_div.children[0].children[0].children;
     const tags_strong: string[] = [];
@@ -54,9 +54,9 @@ export function parse_page(page: string) : ParsedPage {
         const val = tags_elem.getAttribute("title");
 
         assert(val != null);
-        assert(strength == "gtl" || strength == "gt");
+        assert(strength === "gtl" || strength === "gt");
 
-        if (strength == "gtl") {
+        if (strength === "gtl") {
           tags_dashed.push(val);
         } else {
           tags_strong.push(val);
@@ -71,14 +71,14 @@ export function parse_page(page: string) : ParsedPage {
   //match prev/next urls
   if (prev_url != null) {
     const prev_match = prev_url.match("prev=([0-9]+)");
-    assert(prev_match != null && prev_match.length == 2);
+    assert(prev_match != null && prev_match.length === 2);
     prev = +prev_match[2];
   }
 
   const next_url = searchnav?.children[4].children[0].getAttribute("href");
   if (next_url != null) {
     const next_match = next_url.match("next=([0-9]+)");
-    assert(next_match != null && next_match.length == 2);
+    assert(next_match != null && next_match.length === 2);
     next = +next_match[1];
   }
 
