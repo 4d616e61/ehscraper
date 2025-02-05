@@ -91,7 +91,7 @@ export class Scraper {
   public async execute_api_query(query: Array<any>) {
     assert(query.length > 0);
     assert(query[0].length === 2);
-
+    console.log(`Querying ${query.length} entries...`);
     const response = await fetch(this._api_endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -112,6 +112,7 @@ export class Scraper {
     for (const entry of resp_json["gmetadata"]) {
       const gid = entry["gid"];
       if ("error" in entry) {
+        console.log(`gid: ${gid} failed`);
         this._syncdb.unresolve_query(gid);
         continue;
       }
