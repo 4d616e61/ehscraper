@@ -69,7 +69,7 @@ export class Scraper {
 
         //save, parse results, etc etc
         //
-        console.log(`Next: ${page.next}`);
+        //console.log(`Next: ${page.next}`);
         cur_next = page.next;
         if (cur_next < task.start) {
           break;
@@ -126,8 +126,15 @@ export class Scraper {
         sleep(1000);
         continue;
       }
-
-      await this.execute_pagination_task(task);
+      //TODO: unregister task on fail
+      await this.execute_pagination_task(task).catch((reason) => {
+        this._syncdb.unresolve_task(task);
+        console.log("Failed to execute task: ");
+        console.log(task);
+        console.log(`Exception: ${reason}`);
+        console.log("Retrying in 5 seconds...");
+        sleep(5000);
+      });
     }
   }
   public async query_loop() {

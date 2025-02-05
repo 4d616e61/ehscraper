@@ -209,6 +209,13 @@ export class SyncDB {
     )
       .run(task.start, task.end);
   }
+  public unresolve_task(task: Task) {
+    const task_name = task_type_to_name(task.task_type);
+    this._db.prepare(
+      `UPDATE tasks SET ${task_name}='${S_UNSYNCED}' WHERE start= (?) AND end=(?)`,
+    )
+      .run(task.start, task.end);
+  }
   public resolve_query(gid: number) {
     this._db.prepare(
       `UPDATE api_query SET status='${S_FINISHED}' WHERE status='${S_SYNCING}' AND gid = (?)`,
