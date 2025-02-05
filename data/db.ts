@@ -1,11 +1,12 @@
 import { assert } from "@std/assert/assert";
-import { Database } from "jsr:@db/sqlite@0.12";
+import { Database } from "@db/sqlite";
 import { ParsedEntry } from "../scrape/parse.ts";
 
-export const S_SYNCING = "S", S_FINISHED = "F", S_UNSYNCED = "N", S_REDUNDANT = "R"
+export const S_SYNCING = "S",
+  S_FINISHED = "F",
+  S_UNSYNCED = "N",
+  S_REDUNDANT = "R";
 //(redundant = not actually finished, but probably isnt needed)
-
-
 
 export class DataDB {
   private path: string;
@@ -31,7 +32,7 @@ export class DataDB {
             `,
     ).run();
 
-    //json 
+    //json
     this._db.prepare(
       `
               CREATE TABLE IF NOT EXISTS paged_tags (
@@ -42,7 +43,7 @@ export class DataDB {
               );
             `,
     ).run();
-    
+
     this._db.prepare(
       `
               CREATE TABLE IF NOT EXISTS api_response (
@@ -54,18 +55,27 @@ export class DataDB {
     ).run();
   }
 
-  public add_page_entry( entry : ParsedEntry ) {
-    this._db.prepare("INSERT OR REPLACE INTO paged_tags (gid, tags_strong, tags_dashed) VALUES (?, ?, ?)")
-    .run(entry.gid, JSON.stringify(entry.tags_strong), JSON.stringify(entry.tags_dashed))
-    
-    this._db.prepare("INSERT OR REPLACE INTO gid_token (gid, token) VALUES (?, ?)")
-    .run(entry.gid, entry.token)
+  public add_page_entry(entry: ParsedEntry) {
+    this._db.prepare(
+      "INSERT OR REPLACE INTO paged_tags (gid, tags_strong, tags_dashed) VALUES (?, ?, ?)",
+    )
+      .run(
+        entry.gid,
+        JSON.stringify(entry.tags_strong),
+        JSON.stringify(entry.tags_dashed),
+      );
 
+    this._db.prepare(
+      "INSERT OR REPLACE INTO gid_token (gid, token) VALUES (?, ?)",
+    )
+      .run(entry.gid, entry.token);
   }
 
-  public add_api_resp(metadata_obj : any) {
-    const gid = metadata_obj["gid"]
-    this._db.prepare("INSERT OR REPLACE INTO api_response (gid, resp) VALUES (?, ?)")
-    .run(gid, JSON.stringify(metadata_obj))
+  public add_api_resp(metadata_obj: any) {
+    const gid = metadata_obj["gid"];
+    this._db.prepare(
+      "INSERT OR REPLACE INTO api_response (gid, resp) VALUES (?, ?)",
+    )
+      .run(gid, JSON.stringify(metadata_obj));
   }
 }

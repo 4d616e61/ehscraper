@@ -1,12 +1,13 @@
 import { assert } from "@std/assert/assert";
-import { Database } from "jsr:@db/sqlite@0.12";
-import { TaskType, Task, task_type_to_name } from "./task.ts";
+import { Database } from "@db/sqlite";
+import { Task, task_type_to_name, TaskType } from "./task.ts";
 import { ParsedEntry } from "../scrape/parse.ts";
 
-export const S_SYNCING = "S", S_FINISHED = "F", S_UNSYNCED = "N", S_REDUNDANT = "R"
+export const S_SYNCING = "S",
+  S_FINISHED = "F",
+  S_UNSYNCED = "N",
+  S_REDUNDANT = "R";
 //(redundant = not actually finished, but probably isnt needed)
-
-
 
 export class SyncDB {
   private path: string;
@@ -46,7 +47,6 @@ export class SyncDB {
             `,
     ).run();
 
-
     //i honestly thought about using the data db for this but i dont want control to be decided by that
     this._db.prepare(
       `
@@ -58,7 +58,6 @@ export class SyncDB {
               );
             `,
     ).run();
-    
 
     this._db.prepare(
       `
@@ -66,14 +65,19 @@ export class SyncDB {
             `,
     ).run();
 
-
     // Invalidate all tasks with status "running"
-    
+
     //im sorry ok
     //TODO: make this look less hideous
-    this._db.prepare(`UPDATE tasks SET status_all='${S_UNSYNCED}' WHERE status_all='${S_SYNCING}'`).run()
-    this._db.prepare(`UPDATE tasks SET status_normal='${S_UNSYNCED}' WHERE status_normal='${S_SYNCING}'`).run()
-    this._db.prepare(`UPDATE tasks SET status_exh='${S_UNSYNCED}' WHERE status_exh='${S_SYNCING}'`).run()
+    this._db.prepare(
+      `UPDATE tasks SET status_all='${S_UNSYNCED}' WHERE status_all='${S_SYNCING}'`,
+    ).run();
+    this._db.prepare(
+      `UPDATE tasks SET status_normal='${S_UNSYNCED}' WHERE status_normal='${S_SYNCING}'`,
+    ).run();
+    this._db.prepare(
+      `UPDATE tasks SET status_exh='${S_UNSYNCED}' WHERE status_exh='${S_SYNCING}'`,
+    ).run();
   }
 
   //dont use this
@@ -85,16 +89,14 @@ export class SyncDB {
     return res.length == 0;
   }
   public generate_tasks(n_tasks: number, max_id: number, ids_per_task: number) {
-
-
     const res = this._db.prepare(`SELECT id FROM current_id`).all();
     assert(res.length == 1);
     //PROBABLY wont fail
-    const cur_id: number = +res[0]["id"]
+    const cur_id: number = +res[0]["id"];
     const dst_id = cur_id + ids_per_task * n_tasks;
-    if(cur_id >= max_id)
+    if (cur_id >= max_id) {
       return;
-
+    }
 
     //i hate this
     let tasks = [];
@@ -106,37 +108,37 @@ export class SyncDB {
       }
       tasks.push([cur, dst]);
     }
-    let final_end = 0
+    let final_end = 0;
     //TODO: multi insert
-    for(const [start, end] of tasks) {
-      final_end = Math.max(final_end, end)
-      this._db.prepare(`INSERT INTO tasks (start, end, status_all, status_normal, status_exh) VALUES (?, ?, ?, ?, ?)`)
-      .all(start, end, S_UNSYNCED, S_UNSYNCED, S_UNSYNCED);
-
+    for (const [start, end] of tasks) {
+      final_end = Math.max(final_end, end);
+      this._db.prepare(
+        `INSERT INTO tasks (start, end, status_all, status_normal, status_exh) VALUES (?, ?, ?, ?, ?)`,
+      )
+        .all(start, end, S_UNSYNCED, S_UNSYNCED, S_UNSYNCED);
     }
 
     //update counter
     this._db.prepare("UPDATE current_id SET id = (?)").all(final_end);
-    
-    
   }
 
-  public set_completed(task : Task) {
-    const task_name = task_type_to_name(task.task_type)
-    
-    this._db.prepare(`UPDATE tasks SET ${task_name}='${S_FINISHED}' WHERE start=${task.start} AND end=${task.end}`)
+  public set_completed(task: Task) {
+    const task_name = task_type_to_name(task.task_type);
+
+    this._db.prepare(
+      `UPDATE tasks SET ${task_name}='${S_FINISHED}' WHERE start=${task.start} AND end=${task.end}`,
+    );
     //TODO: mark entries as redundant if applicable
   }
 
-  public get_task(task_type : TaskType) {
-    const task_name = task_type_to_name(task_type)
+  public get_task(task_type: TaskType) {
+    const task_name = task_type_to_name(task_type);
     //const res = this._db.prepare(`SELECT start, end FROM tasks WHERE ${task_name} = ${S_UNSYNCED} LIMIT 1`).all()
-    
+
     // If both hybrid(exh/normal) and exclusive(all) modes are used then there might be redundant requests made
     //  TODO: fix ^
 
     //atomically fetch and update
-    
 
     const res = this._db.prepare(`
       UPDATE tasks SET ${task_name}='${S_SYNCING}' 
@@ -148,40 +150,47 @@ export class SyncDB {
        RETURNING start, end`).all();
     //TODO: add logic for  completion check
     //if length 0 then there are probably no avail tasks
-    if(res.length == 0)
+    if (res.length == 0) {
       return null;
+    }
     //assert(res.length > 0)
-    const task_v = res[0]
-    return new Task(task_v["start"], task_v["end"], task_type)
-
+    const task_v = res[0];
+    return new Task(task_v["start"], task_v["end"], task_type);
   }
 
   //this shouldnt ever be anything that isnt the default value
-  public get_queries(max_n_gids : number = 25) {
-    const query = this._db.prepare(`SELECT gid, token FROM api_query WHERE status = '${S_UNSYNCED}' LIMIT ${max_n_gids}`).all()
-    const res = []
-    for(const elem of query) {
+  public get_queries(max_n_gids: number = 25) {
+    const query = this._db.prepare(
+      `SELECT gid, token FROM api_query WHERE status = '${S_UNSYNCED}' LIMIT ${max_n_gids}`,
+    ).all();
+    const res = [];
+    for (const elem of query) {
       //TODO: check that this thing actually pushes 1 array element instead of 2 separate elements
-      res.push([elem["gid"], elem["token"]])
+      res.push([elem["gid"], elem["token"]]);
     }
     return res;
   }
-  public add_page_entry( entry : ParsedEntry ) {
-    
-      this._db.prepare("INSERT OR IGNORE INTO api_query (gid, token, status) VALUES (?, ?, ?)")
-      .run(entry.gid, entry.token, S_UNSYNCED)
-
-  } 
-  public resolve_task(task : Task) {
-    const task_name = task_type_to_name(task.task_type)
-    this._db.prepare(`UPDATE tasks SET ${task_name}='${S_FINISHED}' WHERE ${task_name}='${S_SYNCING}' AND start= (?) AND end=(?)`)
-    .run(task.start, task.end)
-
-} 
-  public resolve_query(gid : number) {
-    this._db.prepare(`UPDATE api_query SET status='${S_FINISHED}' WHERE status='${S_SYNCING}' AND gid = (?)`).run(gid)
+  public add_page_entry(entry: ParsedEntry) {
+    this._db.prepare(
+      "INSERT OR IGNORE INTO api_query (gid, token, status) VALUES (?, ?, ?)",
+    )
+      .run(entry.gid, entry.token, S_UNSYNCED);
   }
-  public unresolve_query(gid : number) {
-    this._db.prepare(`UPDATE api_query SET status='${S_UNSYNCED}' WHERE gid = (?)`).run(gid)
+  public resolve_task(task: Task) {
+    const task_name = task_type_to_name(task.task_type);
+    this._db.prepare(
+      `UPDATE tasks SET ${task_name}='${S_FINISHED}' WHERE ${task_name}='${S_SYNCING}' AND start= (?) AND end=(?)`,
+    )
+      .run(task.start, task.end);
+  }
+  public resolve_query(gid: number) {
+    this._db.prepare(
+      `UPDATE api_query SET status='${S_FINISHED}' WHERE status='${S_SYNCING}' AND gid = (?)`,
+    ).run(gid);
+  }
+  public unresolve_query(gid: number) {
+    this._db.prepare(
+      `UPDATE api_query SET status='${S_UNSYNCED}' WHERE gid = (?)`,
+    ).run(gid);
   }
 }

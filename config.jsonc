@@ -21,7 +21,10 @@
         //Amount of tasks finished before new task generation starts
         "max_generated_tasks" : 1000,
         "db_path" : "./sync.db",
-        "data_path" : "./data"
+        "data_path" : "./data",
+        //automatically generate new tasks when old ones run out
+        "autogen_new_tasks" : true
+
 
 
     }
