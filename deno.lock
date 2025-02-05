@@ -77,6 +77,8 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@b-fuze/deno-dom@*",
+      "jsr:@db/sqlite@0.12",
       "jsr:@std/assert@1"
     ]
   }

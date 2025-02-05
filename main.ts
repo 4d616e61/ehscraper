@@ -2,7 +2,7 @@ import { DataDB } from "./data/db.ts";
 import { Scraper } from "./scrape/scraper.ts";
 import { SyncDB } from "./sync/db.ts";
 import { TaskType } from "./sync/task.ts";
-import { config } from "./config.jsonc" with { type: "json" };
+//import { config } from "./config.jsonc" with { type: "json" };
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,6 +37,6 @@ if (import.meta.main) {
   if (api_q.length == 0) {
     await sleep(10000000);
   }
-  scraper_norm.execute_api_query(api_q);
+  //scraper_norm.execute_api_query(api_q);
   await sleep(100000000);
 }

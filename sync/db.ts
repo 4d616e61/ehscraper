@@ -99,7 +99,7 @@ export class SyncDB {
     }
 
     //i hate this
-    let tasks = [];
+    const tasks = [];
     for (let cur = cur_id; cur < dst_id; cur += ids_per_task) {
       const dst = cur + ids_per_task;
       if (dst > max_id) {

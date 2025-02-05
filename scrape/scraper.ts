@@ -48,39 +48,39 @@ export class Scraper {
     const expunged_iterator = [false, true];
     for (const do_expunged of expunged_iterator) {
       //sounds weird, but this goes from end to start
-
       let cur_next = task.end;
-      console.log(`Expunged: ${do_expunged}`);
-      console.log(`Paginating from ${cur_next}`);
-      //TODO: verify cookies
-      const response = await this.make_page_request(cur_next, do_expunged);
-      //console.log(response.status);  // e.g. 200
-      if (response.status != 200) {
-        return Promise.reject(`Request failed with code ${response.status}`);
+      while(true) {
+
+        
+        console.log(`Expunged: ${do_expunged}`);
+        console.log(`Paginating from ${cur_next}`);
+        //TODO: verify cookies
+        const response = await this.make_page_request(cur_next, do_expunged);
+        //console.log(response.status);  // e.g. 200
+        if (response.status != 200) {
+          return Promise.reject(`Request failed with code ${response.status}`);
+        }
+  
+        const res_text: string = await response.text();
+        const page = parse_page(res_text);
+  
+        //save, parse results, etc etc
+        //
+        console.log(`Next: ${page.next}`);
+        cur_next = page.next;
+        if (cur_next < task.start) {
+          break;
+        }
+        //TODO: handle error
+  
+        for (const entry of page.entries) {
+          this._datadb.add_page_entry(entry);
+          this._syncdb.add_page_entry(entry);
+        }
+
       }
 
-      const res_text: string = await response.text();
 
-      let page: ParsedPage = undefined;
-      try {
-        page = parse_page(res_text);
-      } catch (error) {
-        return Promise.reject(error);
-      }
-
-      //save, parse results, etc etc
-      //
-      console.log(`Next: ${page.next}`);
-      cur_next = page.next;
-      if (cur_next < task.start) {
-        continue;
-      }
-      //TODO: handle error
-
-      for (const entry of page.entries) {
-        this._datadb.add_page_entry(entry);
-        this._syncdb.add_page_entry(entry);
-      }
     }
     this._syncdb.resolve_task(task);
     console.log(`Resolved task: `);

@@ -1,37 +1,21 @@
 import { assert } from "@std/assert/assert";
-import { DOMParser, Element } from "@b-fuze/deno-dom";
+import { DOMParser } from "@b-fuze/deno-dom";
 
-export class ParsedEntry {
-  public gid: number;
-  public token: string;
-  public tags_strong: string[];
-  public tags_dashed: string[];
+export interface ParsedEntry {
+  gid: number;
+  token: string;
+  tags_strong: string[];
+  tags_dashed: string[];
 
-  constructor(
-    gid: number,
-    token: string,
-    tags_strong: string[],
-    tags_dashed: string[],
-  ) {
-    this.gid = gid;
-    this.token = token;
-    this.tags_strong = tags_strong;
-    this.tags_dashed = tags_dashed;
-  }
 }
 
-export class ParsedPage {
-  public entries: ParsedEntry[];
-  public prev: number;
-  public next: number;
-  constructor(entries: ParsedEntry[], prev: number, next: number) {
-    this.entries = entries;
-    this.prev = prev;
-    this.next = next;
-  }
+export interface ParsedPage {
+  entries: ParsedEntry[];
+  prev: number;
+  next: number;
 }
 
-export function parse_page(page: string) {
+export function parse_page(page: string) : ParsedPage {
   const doc = new DOMParser().parseFromString(page, "text/html");
   const entries_table = doc.querySelector(".itg")?.children[0].children;
 
@@ -79,7 +63,7 @@ export function parse_page(page: string) {
         }
       }
     }
-    entries.push(new ParsedEntry(gid, token, tags_strong, tags_dashed));
+    entries.push({gid, token, tags_strong, tags_dashed});
   }
   const searchnav = doc.querySelector(".searchnav");
   const prev_url = searchnav?.children[2].children[0].getAttribute("href");
@@ -98,5 +82,5 @@ export function parse_page(page: string) {
     next = +next_match[1];
   }
 
-  return new ParsedPage(entries, prev, next);
+  return {entries, prev, next};
 }
