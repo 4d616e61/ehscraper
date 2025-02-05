@@ -145,7 +145,7 @@ export class SyncDB {
       WHERE task_id = (
         SELECT min(t.task_id)
         FROM tasks t
-        where t.${task_name}==='${S_UNSYNCED}'
+        where t.${task_name}='${S_UNSYNCED}'
       )
        RETURNING start, end`).all();
     //TODO: add logic for  completion check
