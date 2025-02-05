@@ -11,13 +11,27 @@ export const S_SYNCING = "S",
 
 export class SyncDB {
   private path: string;
+  private autogen_tasks: boolean;
+  private n_tasks_generated: number;
+  public max_id: number;
+  private ids_per_task: number;
   private _db: Database;
 
-  constructor(path: string) {
+  constructor(
+    path: string,
+    autogen_tasks: boolean,
+    n_tasks_generated: number,
+    max_id: number,
+    ids_per_task: number,
+  ) {
     assert(path != null);
 
     this.path = path;
     this._db = new Database(this.path);
+    this.autogen_tasks = autogen_tasks;
+    this.n_tasks_generated = n_tasks_generated;
+    this.max_id = max_id;
+    this.ids_per_task = ids_per_task;
     this.init_db();
   }
 
@@ -137,21 +151,33 @@ export class SyncDB {
 
     // If both hybrid(exh/normal) and exclusive(all) modes are used then there might be redundant requests made
     //  TODO: fix ^
-
-    //atomically fetch and update
-
-    const res = this._db.prepare(`
+    const query_string = `
       UPDATE tasks SET ${task_name}='${S_SYNCING}' 
       WHERE task_id = (
         SELECT min(t.task_id)
         FROM tasks t
         where t.${task_name}='${S_UNSYNCED}'
       )
-       RETURNING start, end`).all();
+       RETURNING start, end`;
+    //atomically fetch and update
+    let res = this._db.prepare(query_string).all();
     //TODO: add logic for  completion check
     //if length 0 then there are probably no avail tasks
+
+    //kinda sucks but oh well
     if (res.length === 0) {
-      return null;
+      if (!this.autogen_tasks) {
+        return null;
+      }
+      this.generate_tasks(
+        this.n_tasks_generated,
+        this.max_id,
+        this.ids_per_task,
+      );
+      res = this._db.prepare(query_string).all();
+      if (res.length === 0) {
+        return null;
+      }
     }
     //assert(res.length > 0)
     const task_v = res[0];

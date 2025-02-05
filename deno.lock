@@ -11,6 +11,8 @@
     "jsr:@std/fmt@0.221": "0.221.0",
     "jsr:@std/fs@0.221": "0.221.0",
     "jsr:@std/internal@^1.0.5": "1.0.5",
+    "jsr:@std/json@1": "1.0.1",
+    "jsr:@std/jsonc@*": "1.0.1",
     "jsr:@std/path@0.217": "0.217.0",
     "jsr:@std/path@0.221": "0.221.0"
   },
@@ -62,6 +64,15 @@
     "@std/internal@1.0.5": {
       "integrity": "54a546004f769c1ac9e025abd15a76b6671ddc9687e2313b67376125650dc7ba"
     },
+    "@std/json@1.0.1": {
+      "integrity": "1f0f70737e8827f9acca086282e903677bc1bb0c8ffcd1f21bca60039563049f"
+    },
+    "@std/jsonc@1.0.1": {
+      "integrity": "6b36956e2a7cbb08ca5ad7fbec72e661e6217c202f348496ea88747636710dda",
+      "dependencies": [
+        "jsr:@std/json"
+      ]
+    },
     "@std/path@0.217.0": {
       "integrity": "1217cc25534bca9a2f672d7fe7c6f356e4027df400c0e85c0ef3e4343bc67d11",
       "dependencies": [
@@ -79,7 +90,8 @@
     "dependencies": [
       "jsr:@b-fuze/deno-dom@*",
       "jsr:@db/sqlite@0.12",
-      "jsr:@std/assert@1"
+      "jsr:@std/assert@1",
+      "jsr:@std/jsonc@*"
     ]
   }
 }

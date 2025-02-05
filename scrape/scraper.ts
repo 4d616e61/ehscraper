@@ -3,6 +3,8 @@ import { DataDB } from "../data/db.ts";
 import { SyncDB } from "../sync/db.ts";
 import { Task } from "../sync/task.ts";
 import { parse_page, ParsedPage } from "./parse.ts";
+import { sleep } from "../utils/utils.ts";
+import { TaskType } from "../sync/task.ts";
 
 export class Scraper {
   //sl: "dm_2"
@@ -11,14 +13,17 @@ export class Scraper {
   private _datadb: DataDB;
   private _api_endpoint: string;
   private _cookie: string;
+  private _accepted_type: TaskType;
   constructor(
     sdb: SyncDB,
     ddb: DataDB,
+    accepted_type: TaskType,
     api_endpoint = "https://api.e-hentai.org/api.php",
   ) {
     this._syncdb = sdb;
     this._datadb = ddb;
     this._cookie = "";
+    this._accepted_type = accepted_type;
     this._api_endpoint = api_endpoint;
   }
 
@@ -112,6 +117,28 @@ export class Scraper {
       }
       this._datadb.add_api_resp(entry);
       this._syncdb.resolve_query(gid);
+    }
+  }
+  public async pagination_loop() {
+    while (true) {
+      const task = this._syncdb.get_task(this._accepted_type);
+      if (task === null) {
+        sleep(1000);
+        continue;
+      }
+
+      await this.execute_pagination_task(task);
+    }
+  }
+  public async query_loop() {
+    while (true) {
+      const query = this._syncdb.get_queries();
+      if (query.length === 0) {
+        sleep(1000);
+        continue;
+      }
+
+      await this.execute_api_query(query);
     }
   }
 }
