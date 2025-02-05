@@ -110,7 +110,6 @@ export class SyncDB {
     //TODO: multi insert
     for(const [start, end] of tasks) {
       final_end = Math.max(final_end, end)
-      console.log(start, end)
       this._db.prepare(`INSERT INTO tasks (start, end, status_all, status_normal, status_exh) VALUES (?, ?, ?, ?, ?)`)
       .all(start, end, S_UNSYNCED, S_UNSYNCED, S_UNSYNCED);
 
@@ -165,7 +164,6 @@ export class SyncDB {
       //TODO: check that this thing actually pushes 1 array element instead of 2 separate elements
       res.push([elem["gid"], elem["token"]])
     }
-    console.log(res)
     return res;
   }
   public add_page_entry( entry : ParsedEntry ) {

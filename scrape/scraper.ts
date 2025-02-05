@@ -25,15 +25,20 @@ export class Scraper {
 
     private async make_page_request(next : number, is_expunged : boolean){
         const expunged_string = is_expunged ? "on" : "";
-        return fetch(`https://e-hentai.org?next=${next}&f_cats=0&advsearch=1&f_sname=on&f_stags=on&f_sh=${expunged_string}`, {
+        const response = await fetch(`https://e-hentai.org?next=${next}&f_cats=0&advsearch=1&f_sname=on&f_stags=on&f_sh=${expunged_string}`, {
                 headers : {
                     cookie : this._cookie + 'sl=dm_2',
                 }
             })
+        if( response.status != 200)
+            return Promise.reject(`Request failed with code ${response.status}`)
+        return response
     }
     
     public async get_max_gid() {
-
+        const res = await this.make_page_request(0, false);
+        const page : ParsedPage = parse_page(await res.text());
+        return page.entries[0].gid;
     }
 
     public async execute_pagination_task(task : Task) {
@@ -42,19 +47,26 @@ export class Scraper {
         for(const do_expunged of expunged_iterator) {
 
             //sounds weird, but this goes from end to start
+
             let cur_next = task.end
-            
+            console.log(`Expunged: ${do_expunged}`)
             console.log(`Paginating from ${cur_next}`)
             //TODO: verify cookies
             const response = await this.make_page_request(cur_next, do_expunged);
-            console.log(response.status);  // e.g. 200
+            //console.log(response.status);  // e.g. 200
             if( response.status != 200)
                 return Promise.reject(`Request failed with code ${response.status}`)
         
             const res_text : string = await response.text();
             
+            let page : ParsedPage = undefined;
+            try{
+                page = parse_page(res_text);
+            }
+            catch(error) {
+                return Promise.reject(error);
+            }
             
-            const page : ParsedPage = parse_page(res_text);
             //save, parse results, etc etc
             //
             console.log(`Next: ${page.next}` )
@@ -94,8 +106,14 @@ export class Scraper {
                 namespace : 1,
             })
         })
-        if( response.status != 200)
+        if( response.status != 200) {
+            for(const entry of query) {
+                this._syncdb.unresolve_query(entry[0])
+            }
+            
             return Promise.reject(`Request failed with code ${response.status}`)
+        }
+            
         const resp_json = await response.json()
         for(const entry of resp_json["gmetadata"]) {
             const gid = entry["gid"]

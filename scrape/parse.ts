@@ -57,8 +57,11 @@ export function parse_page(page : string) {
 
         const gid : number = +href_match[1];
         const token : string = href_match[2];
-
-        const tags_table = href_elem.children[0].children[1].children[0].children[0].children;
+        //console.log(href_url)
+        //i hate this even more
+        const table_start_div = href_elem.children[0].children[1];
+        //edge case of no tags
+        const tags_table = table_start_div.children.length == 0 ? [] : table_start_div.children[0].children[0].children;
         const tags_strong : string[] = []
         const tags_dashed : string[] = []
         //holy shit i hate this 
