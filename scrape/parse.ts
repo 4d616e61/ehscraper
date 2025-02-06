@@ -6,7 +6,6 @@ export interface ParsedEntry {
   token: string;
   tags_strong: string[];
   tags_dashed: string[];
-
 }
 
 export interface ParsedPage {
@@ -15,7 +14,7 @@ export interface ParsedPage {
   next: number;
 }
 
-export function parse_page(page: string) : ParsedPage {
+export function parse_page(page: string): ParsedPage {
   const doc = new DOMParser().parseFromString(page, "text/html");
   const entries_table = doc.querySelector(".itg")?.children[0].children;
 
@@ -63,7 +62,7 @@ export function parse_page(page: string) : ParsedPage {
         }
       }
     }
-    entries.push({gid, token, tags_strong, tags_dashed});
+    entries.push({ gid, token, tags_strong, tags_dashed });
   }
   const searchnav = doc.querySelector(".searchnav");
   const prev_url = searchnav?.children[2].children[0].getAttribute("href");
@@ -82,5 +81,5 @@ export function parse_page(page: string) : ParsedPage {
     next = +next_match[1];
   }
 
-  return {entries, prev, next};
+  return { entries, prev, next };
 }

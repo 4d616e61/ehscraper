@@ -18,12 +18,13 @@ export class Scraper {
     sdb: SyncDB,
     ddb: DataDB,
     accepted_type: TaskType,
+    cookie: string = "",
     api_endpoint = "https://api.e-hentai.org/api.php",
   ) {
     this._syncdb = sdb;
     this._datadb = ddb;
-    this._cookie = "";
     this._accepted_type = accepted_type;
+    this._cookie = cookie;
     this._api_endpoint = api_endpoint;
   }
 
