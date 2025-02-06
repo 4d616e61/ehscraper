@@ -129,6 +129,8 @@ export class Scraper {
         continue;
       }
       //TODO: unregister task on fail
+      console.log("Executing task:");
+      console.log(task);
       await this.execute_pagination_task(task).catch((reason) => {
         this._syncdb.unresolve_task(task);
         console.log("Failed to execute task: ");
