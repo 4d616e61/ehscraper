@@ -30,11 +30,14 @@ export class Scraper {
 
   private async make_page_request(next: number, is_expunged: boolean) {
     const expunged_string = is_expunged ? "on" : "";
+    let cookie = this._cookie.replaceAll("sl=[^;]+;?", "");
+    cookie += cookie.endsWith(";") ? "" : ";";
+    cookie += "sl=dm_2";
     const response = await fetch(
       `https://e-hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}`,
       {
         headers: {
-          cookie: this._cookie + "sl=dm_2",
+          cookie: cookie,
         },
       },
     );

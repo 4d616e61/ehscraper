@@ -71,6 +71,7 @@ export class DataDB {
       .run(entry.gid, entry.token);
   }
 
+  // deno-lint-ignore no-explicit-any
   public add_api_resp(metadata_obj: any) {
     const gid = metadata_obj["gid"];
     this._db.prepare(

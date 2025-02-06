@@ -4,7 +4,6 @@ import { Scraper } from "./scrape/scraper.ts";
 import { SyncDB } from "./sync/db.ts";
 import { TaskType } from "./sync/task.ts";
 import { sleep } from "./utils/utils.ts";
-import { parse } from "@std/jsonc";
 import config from "./config.json" with { type: "json" };
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
