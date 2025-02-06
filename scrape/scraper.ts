@@ -31,7 +31,7 @@ export class Scraper {
   private async make_page_request(next: number, is_expunged: boolean) {
     const expunged_string = is_expunged ? "on" : "";
     const response = await fetch(
-      `https://e-hentai.org?next=${next}&f_cats=0&advsearch=1&f_sname=on&f_stags=on&f_sh=${expunged_string}`,
+      `https://e-hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}`,
       {
         headers: {
           cookie: this._cookie + "sl=dm_2",
