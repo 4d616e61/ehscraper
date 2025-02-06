@@ -1,36 +1,26 @@
 {
+  "scrape": {
+    "use_auth": false,
 
-    "scrape" : {
-        "use_auth" : false,    
-        
-        "cookies" : "",
+    "cookies": "",
 
-        "use_proxies" : false,
-        "proxies" : []
-    },
-    "api" : {
-        "use_proxies" : false,
-        "proxies" : []
-    },
-    
+    "use_proxies": false,
+    "proxies": []
+  },
+  "api": {
+    "use_proxies": false,
+    "proxies": []
+  },
 
-    "sync" : {
-        //Increased value -> less redundant requests, more progress lost when program fails
-        //Note that this setting does not affect previously generated tasks
-        "max_ids_per_task" : 5000,
-        //Amount of tasks finished before new task generation starts
-        "max_generated_tasks" : 1000,
-        "db_path" : "./sync.db",
-        "data_path" : "./data",
-        //automatically generate new tasks when old ones run out
-        "autogen_new_tasks" : true
-
-
-
-    }
-
-
-
-
-
+  "sync": {
+    //Increased value -> less redundant requests, more progress lost when program fails
+    //Note that this setting does not affect previously generated tasks
+    "max_ids_per_task": 5000,
+    //Amount of tasks finished before new task generation starts
+    "max_generated_tasks": 1000,
+    "db_path": "./sync.db",
+    "data_path": "./data",
+    //automatically generate new tasks when old ones run out
+    "autogen_new_tasks": true
+  }
 }
