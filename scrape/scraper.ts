@@ -14,6 +14,8 @@ export class Scraper {
   private _api_endpoint: string;
   private _cookie: string;
   private _accepted_type: TaskType;
+  private _exh_search: string =
+    "lolicon+shotacon+beastality+toddlercon+abortion";
   constructor(
     sdb: SyncDB,
     ddb: DataDB,
@@ -28,13 +30,20 @@ export class Scraper {
     this._api_endpoint = api_endpoint;
   }
 
-  private async make_page_request(next: number, is_expunged: boolean) {
+  private async make_page_request(
+    next: number,
+    is_expunged: boolean,
+    search_string: string = "",
+    do_exhentai: boolean = false,
+  ) {
     const expunged_string = is_expunged ? "on" : "";
     let cookie = this._cookie.replaceAll("sl=[^;]+;?", "");
     cookie += cookie.endsWith(";") ? "" : ";";
     cookie += "sl=dm_2";
     const response = await fetch(
-      `https://e-hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}`,
+      `https://e${
+        do_exhentai ? "x" : "-"
+      }hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}&f_search=${search_string}`,
       {
         headers: {
           cookie: cookie,
@@ -62,7 +71,18 @@ export class Scraper {
       while (true) {
         console.log(`Paginating from ${cur_next}`);
         //TODO: verify cookies
-        const response = await this.make_page_request(cur_next, do_expunged);
+        const search_string: string = this._accepted_type == TaskType.EXH
+          ? this._exh_search
+          : "";
+        const do_exhentai: boolean = this._accepted_type == TaskType.NORM
+          ? false
+          : true;
+        const response = await this.make_page_request(
+          cur_next,
+          do_expunged,
+          search_string,
+          do_exhentai,
+        );
         //console.log(response.status);  // e.g. 200
         if (response.status != 200) {
           return Promise.reject(`Request failed with code ${response.status}`);
