@@ -3,7 +3,7 @@ import { DataDB } from "../data/db.ts";
 import { SyncDB } from "../sync/db.ts";
 import { Task } from "../sync/task.ts";
 import { parse_page, ParsedPage } from "./parse.ts";
-import { sleep } from "../utils/utils.ts";
+import { sleep, sleep_await } from "../utils/utils.ts";
 import { TaskType } from "../sync/task.ts";
 
 export class Scraper {
@@ -15,7 +15,7 @@ export class Scraper {
   private _cookie: string;
   private _accepted_type: TaskType;
   private _exh_search: string =
-    "lolicon+shotacon+beastality+toddlercon+abortion";
+    "~lolicon+~shotacon+~beastality+~toddlercon+~abortion";
   constructor(
     sdb: SyncDB,
     ddb: DataDB,
@@ -37,7 +37,7 @@ export class Scraper {
     do_exhentai: boolean = false,
   ) {
     const expunged_string = is_expunged ? "on" : "";
-    let cookie = this._cookie.replaceAll("sl=[^;]+;?", "");
+    let cookie = this._cookie.replaceAll(/sl=[^;]+;?/g, "");
     cookie += cookie.endsWith(";") ? "" : ";";
     cookie += "sl=dm_2";
     const response = await fetch(
@@ -94,15 +94,16 @@ export class Scraper {
         //save, parse results, etc etc
         //
         //console.log(`Next: ${page.next}`);
-        cur_next = page.next;
-        if (cur_next < task.start) {
-          break;
-        }
+
         //TODO: handle error
 
         for (const entry of page.entries) {
           this._datadb.add_page_entry(entry);
           this._syncdb.add_page_entry(entry);
+        }
+        cur_next = page.next;
+        if (cur_next < task.start) {
+          break;
         }
       }
     }
@@ -148,7 +149,7 @@ export class Scraper {
     while (true) {
       const task = this._syncdb.get_task(this._accepted_type);
       if (task === null) {
-        sleep(1000);
+        await sleep(1000);
         continue;
       }
       //TODO: unregister task on fail
@@ -160,8 +161,9 @@ export class Scraper {
         console.log(task);
         console.log(`Exception: ${reason}`);
         console.log("Retrying in 5 seconds...");
-        sleep(5000);
+        sleep_await(5000);
       });
+      await sleep(1000);
     }
   }
   public async query_loop() {

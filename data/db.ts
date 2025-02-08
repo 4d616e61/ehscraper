@@ -37,7 +37,7 @@ export class DataDB {
       `
               CREATE TABLE IF NOT EXISTS paged_tags (
               gid                 INTEGER,
-              tags_strong         TEXT,
+              tags_solid         TEXT,
               tags_dashed         TEXT,
               PRIMARY KEY(gid)
               );
@@ -57,11 +57,11 @@ export class DataDB {
 
   public add_page_entry(entry: ParsedEntry) {
     this._db.prepare(
-      "INSERT OR REPLACE INTO paged_tags (gid, tags_strong, tags_dashed) VALUES (?, ?, ?)",
+      "INSERT OR REPLACE INTO paged_tags (gid, tags_solid, tags_dashed) VALUES (?, ?, ?)",
     )
       .run(
         entry.gid,
-        JSON.stringify(entry.tags_strong),
+        JSON.stringify(entry.tags_solid),
         JSON.stringify(entry.tags_dashed),
       );
 

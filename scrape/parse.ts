@@ -4,7 +4,7 @@ import { DOMParser } from "@b-fuze/deno-dom";
 export interface ParsedEntry {
   gid: number;
   token: string;
-  tags_strong: string[];
+  tags_solid: string[];
   tags_dashed: string[];
 }
 
@@ -44,7 +44,7 @@ export function parse_page(page: string): ParsedPage {
     const tags_table = table_start_div.children.length === 0
       ? []
       : table_start_div.children[0].children[0].children;
-    const tags_strong: string[] = [];
+    const tags_solid: string[] = [];
     const tags_dashed: string[] = [];
     //holy shit i hate this
     for (const tags_namespaces of tags_table) {
@@ -58,11 +58,11 @@ export function parse_page(page: string): ParsedPage {
         if (strength === "gtl") {
           tags_dashed.push(val);
         } else {
-          tags_strong.push(val);
+          tags_solid.push(val);
         }
       }
     }
-    entries.push({ gid, token, tags_strong, tags_dashed });
+    entries.push({ gid, token, tags_solid, tags_dashed });
   }
   const searchnav = doc.querySelector(".searchnav");
   const prev_url = searchnav?.children[2].children[0].getAttribute("href");
