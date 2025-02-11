@@ -145,7 +145,7 @@ export class Scraper {
       this._syncdb.resolve_query(gid);
     }
   }
-  public async pagination_loop() {
+  public async pagination_loop(delay: number = 5000) {
     while (true) {
       const task = this._syncdb.get_task(this._accepted_type);
       if (task === null) {
@@ -163,10 +163,10 @@ export class Scraper {
         console.log("Retrying in 5 seconds...");
         sleep_await(5000);
       });
-      await sleep(1000);
+      await sleep(delay);
     }
   }
-  public async query_loop() {
+  public async query_loop(delay: number = 5000) {
     let attempts = 0;
     const max_attempts = 10;
     while (true) {
@@ -187,7 +187,15 @@ export class Scraper {
         continue;
       }
       attempts = 0;
-      await this.execute_api_query(query);
+      await this.execute_api_query(query).catch((reason) => {
+        //this._syncdb.unresolve_task(task);
+        console.log("Failed to execute query.");
+        //console.log(task);
+        console.log(`Exception: ${reason}`);
+        console.log("Retrying in 5 seconds...");
+        sleep_await(5000);
+      });
+      await sleep(delay);
     }
   }
 }
