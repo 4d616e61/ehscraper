@@ -189,9 +189,20 @@ export class SyncDB {
 
   //this shouldnt ever be anything that isnt the default value
   public get_queries(max_n_gids: number = 25) {
+    const query_string = `
+      UPDATE api_query SET status='${S_SYNCING}' 
+      FROM (
+        SELECT gid
+        FROM api_query q
+        where q.status='${S_UNSYNCED}'
+        limit ${max_n_gids}
+      ) r
+       WHERE api_query.gid=r.gid
+       RETURNING gid, token`;
     const query = this._db.prepare(
-      `SELECT gid, token FROM api_query WHERE status = '${S_UNSYNCED}' LIMIT ${max_n_gids}`,
+      query_string,
     ).all();
+
     const res = [];
     for (const elem of query) {
       //TODO: check that this thing actually pushes 1 array element instead of 2 separate elements
