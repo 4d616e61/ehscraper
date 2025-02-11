@@ -92,6 +92,9 @@ export class SyncDB {
     this._db.prepare(
       `UPDATE tasks SET status_exh='${S_UNSYNCED}' WHERE status_exh='${S_SYNCING}'`,
     ).run();
+    this._db.prepare(
+      `UPDATE api_query SET status='${S_UNSYNCED}' WHERE status='${S_SYNCING}'`,
+    ).run();
   }
 
   //dont use this
