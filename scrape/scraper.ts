@@ -111,6 +111,7 @@ export class Scraper {
     this._syncdb.resolve_task(task);
     console.log(`Resolved task: `);
     console.log(task);
+    return true;
   }
 
   // deno-lint-ignore no-explicit-any
@@ -144,6 +145,7 @@ export class Scraper {
       }
       this._datadb.add_api_resp(entry);
       this._syncdb.resolve_query(gid);
+      return true;
     }
   }
   public async pagination_loop(delay: number = 5000) {
@@ -156,24 +158,33 @@ export class Scraper {
       //TODO: unregister task on fail
       console.log("Executing task:");
       console.log(task);
-      await this.execute_pagination_task(task, delay).catch((reason) => {
-        this._syncdb.unresolve_task(task);
-        console.log("Failed to execute task: ");
-        console.log(task);
-        console.log(`Exception: ${reason}`);
-        console.log("Retrying in 5 seconds...");
-        sleep_await(5000);
-      });
+      const success = await this.execute_pagination_task(task, delay).catch(
+        (reason) => {
+          this._syncdb.unresolve_task(task);
+          console.log("Failed to execute task: ");
+          console.log(task);
+          console.log(`Exception: ${reason}`);
+          console.log(`Retrying in ${delay * 10 / 1000} seconds...`);
+          return false;
+        },
+      );
+      if (success) {
+        //passs
+      } else {
+        await sleep(delay * 10);
+      }
     }
   }
   public async query_loop(delay: number = 5000) {
     let attempts = 0;
     const max_attempts = 10;
     while (true) {
+      false;
       const query = this._syncdb.get_queries();
       if (query.length === 0) {
         attempts++;
-        if (attempts >= max_attempts) {
+        //if (attempts >= max_attempts) {
+        if (false) {
           console.log(
             `No query tasks after ${max_attempts} tries. Exiting query loop.`,
           );
@@ -187,15 +198,21 @@ export class Scraper {
         continue;
       }
       attempts = 0;
-      await this.execute_api_query(query).catch((reason) => {
-        //this._syncdb.unresolve_task(task);
-        console.log("Failed to execute query.");
-        //console.log(task);
-        console.log(`Exception: ${reason}`);
-        console.log("Retrying in 5 seconds...");
-        sleep_await(5000);
-      });
-      await sleep(delay);
+      const success = await this.execute_api_query(query).catch(
+        (reason) => {
+          //this._syncdb.unresolve_task(task);
+          console.log("Failed to execute query.");
+          //console.log(task);
+          console.log(`Exception: ${reason}`);
+          console.log(`Retrying in ${delay * 10 / 1000} seconds...`);
+          return false;
+        },
+      );
+      if (success) {
+        await sleep(delay);
+      } else {
+        await sleep(delay * 10);
+      }
     }
   }
 }
