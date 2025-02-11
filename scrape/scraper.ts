@@ -62,7 +62,7 @@ export class Scraper {
     return page.entries[0].gid;
   }
 
-  public async execute_pagination_task(task: Task) {
+  public async execute_pagination_task(task: Task, delay: number = 5000) {
     const expunged_iterator = [false, true];
     for (const do_expunged of expunged_iterator) {
       //sounds weird, but this goes from end to start
@@ -102,6 +102,7 @@ export class Scraper {
           this._syncdb.add_page_entry(entry);
         }
         cur_next = page.next;
+        await sleep(delay);
         if (cur_next < task.start) {
           break;
         }
@@ -155,7 +156,7 @@ export class Scraper {
       //TODO: unregister task on fail
       console.log("Executing task:");
       console.log(task);
-      await this.execute_pagination_task(task).catch((reason) => {
+      await this.execute_pagination_task(task, delay).catch((reason) => {
         this._syncdb.unresolve_task(task);
         console.log("Failed to execute task: ");
         console.log(task);
@@ -163,7 +164,6 @@ export class Scraper {
         console.log("Retrying in 5 seconds...");
         sleep_await(5000);
       });
-      await sleep(delay);
     }
   }
   public async query_loop(delay: number = 5000) {
