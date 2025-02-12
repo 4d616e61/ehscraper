@@ -89,6 +89,28 @@ export class Scraper {
     const page: ParsedPage = parse_page(await res.text());
     return page.entries[0].gid;
   }
+  private async test_and_handle_ipban(
+    res_text: string,
+    fail_timeout: number = 10000,
+  ) {
+    if (!is_ip_banned(res_text)) {
+      return false;
+    }
+
+    console.log("IP Ban detected. Attempting to switch proxies.");
+    if (this._active_proxy) {
+      this._proxy_provider.invalidate_proxy(this._active_proxy);
+    }
+    if (!this.switch_proxy()) {
+      console.log(
+        `Unable to switch proxies. Sleeping for ${
+          fail_timeout / 1000
+        } seconds.`,
+      );
+      await sleep(fail_timeout);
+    }
+    return true;
+  }
 
   public async execute_pagination_task(task: Task, delay: number = 5000) {
     const expunged_iterator = [false, true];
@@ -113,21 +135,9 @@ export class Scraper {
         );
         const res_text: string = await response.text();
         //console.log(response.status);  // e.g. 200
-        if (is_ip_banned(res_text)) {
-          console.log("IP Ban detected. Attempting to switch proxies.");
-          if (this._active_proxy) {
-            this._proxy_provider.invalidate_proxy(this._active_proxy);
-          }
-          if (this.switch_proxy()) {
-            continue;
-          } else {
-            console.log(
-              `Unable to switch proxies. Sleeping for ${
-                delay * 10 / 1000
-              } seconds.`,
-            );
-            await sleep(delay * 10);
-          }
+        const ipban = await this.test_and_handle_ipban(res_text, delay * 10);
+        if (ipban) {
+          continue;
         }
         if (response.status != 200) {
           return Promise.reject(`Request failed with code ${response.status}`);
@@ -172,26 +182,10 @@ export class Scraper {
       }),
     });
     const resp_text = await response.text();
-    const ip_banned = is_ip_banned(resp_text);
+    const ip_banned = await this.test_and_handle_ipban(resp_text, 1000 * 10);
     if (response.status != 200 || ip_banned) {
       for (const entry of query) {
         this._syncdb.unresolve_query(entry[0]);
-      }
-      if (ip_banned) {
-        console.log("IP Ban detected. Attempting to switch proxies.");
-        if (this._active_proxy) {
-          this._proxy_provider.invalidate_proxy(this._active_proxy);
-        }
-        if (!this.switch_proxy()) {
-          //TODO: fix
-          const delay = 5000;
-          console.log(
-            `Unable to switch proxies. Sleeping for ${
-              delay * 10 / 1000
-            } seconds.`,
-          );
-          await sleep(delay * 10);
-        }
       }
 
       return Promise.reject(
