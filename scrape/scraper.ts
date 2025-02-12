@@ -171,7 +171,8 @@ export class Scraper {
         namespace: 1,
       }),
     });
-    const ip_banned = is_ip_banned(await response.text());
+    const resp_text = await response.text();
+    const ip_banned = is_ip_banned(resp_text);
     if (response.status != 200 || ip_banned) {
       for (const entry of query) {
         this._syncdb.unresolve_query(entry[0]);
@@ -197,7 +198,7 @@ export class Scraper {
         `Request failed with code ${response.status}, ip ban status: ${ip_banned}`,
       );
     }
-    const resp_json = await response.json();
+    const resp_json = JSON.parse(resp_text);
     for (const entry of resp_json["gmetadata"]) {
       const gid = entry["gid"];
       if ("error" in entry) {
