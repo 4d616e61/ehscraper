@@ -83,3 +83,7 @@ export function parse_page(page: string): ParsedPage {
 
   return { entries, prev, next };
 }
+
+export function is_ip_banned(page: string): boolean {
+  return page.match(/^This IP address has been temporarily banned/) != null;
+}

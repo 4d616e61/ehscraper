@@ -2,10 +2,10 @@ import { assert } from "@std/assert/assert";
 import { DataDB } from "../data/db.ts";
 import { SyncDB } from "../sync/db.ts";
 import { Task } from "../sync/task.ts";
-import { parse_page, ParsedPage } from "./parse.ts";
+import { is_ip_banned, parse_page, ParsedPage } from "./parse.ts";
 import { sleep, sleep_await } from "../utils/utils.ts";
 import { TaskType } from "../sync/task.ts";
-
+import { ProxyProvider, RequestProxy } from "./proxyprovider.ts";
 export class Scraper {
   //sl: "dm_2"
   //^cookie for extended layout
@@ -16,11 +16,16 @@ export class Scraper {
   private _accepted_type: TaskType;
   private _exh_search: string =
     "~lolicon+~shotacon+~beastality+~toddlercon+~abortion";
+  private _proxy_provider: ProxyProvider;
+  private _http_client: Deno.HttpClient;
+  private _active_proxy?: RequestProxy;
   constructor(
     sdb: SyncDB,
     ddb: DataDB,
     accepted_type: TaskType,
     cookie: string = "",
+    //Base proxy provider doesnt do anything
+    proxy_provider: ProxyProvider = new ProxyProvider(),
     api_endpoint = "https://api.e-hentai.org/api.php",
   ) {
     this._syncdb = sdb;
@@ -28,6 +33,27 @@ export class Scraper {
     this._accepted_type = accepted_type;
     this._cookie = cookie;
     this._api_endpoint = api_endpoint;
+    this._proxy_provider = proxy_provider;
+    this._http_client = Deno.createHttpClient({});
+    this._active_proxy = undefined;
+  }
+
+  private switch_proxy(): boolean {
+    const proxy = this._proxy_provider.get_proxy();
+    if (proxy) {
+      this._active_proxy = proxy;
+      this._http_client = Deno.createHttpClient({ proxy: this._active_proxy });
+      return true;
+    }
+    this._http_client = Deno.createHttpClient({});
+    return false;
+  }
+
+  private _fetch_wrapper(url: string, request_init: RequestInit) {
+    //this sucks but i dont care
+    const request_init_any: any = request_init;
+    request_init_any.client = this._http_client;
+    return fetch(url, request_init);
   }
 
   private async make_page_request(
@@ -40,7 +66,7 @@ export class Scraper {
     let cookie = this._cookie.replaceAll(/sl=[^;]+;?/g, "");
     cookie += cookie.endsWith(";") ? "" : ";";
     cookie += "sl=dm_2";
-    const response = await fetch(
+    const response = await this._fetch_wrapper(
       `https://e${
         do_exhentai ? "x" : "-"
       }hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}&f_search=${search_string}`,
@@ -83,12 +109,25 @@ export class Scraper {
           search_string,
           do_exhentai,
         );
+        const res_text: string = await response.text();
         //console.log(response.status);  // e.g. 200
+        if (is_ip_banned(res_text)) {
+          console.log("IP Ban detected. Attempting to switch proxies.");
+          if (this.switch_proxy()) {
+            continue;
+          } else {
+            console.log(
+              `Unable to switch proxies. Sleeping for ${
+                delay * 10 / 1000
+              } seconds.`,
+            );
+            await sleep(delay * 10);
+          }
+        }
         if (response.status != 200) {
           return Promise.reject(`Request failed with code ${response.status}`);
         }
 
-        const res_text: string = await response.text();
         const page = parse_page(res_text);
 
         //save, parse results, etc etc
@@ -119,7 +158,7 @@ export class Scraper {
     assert(query.length > 0);
     assert(query[0].length === 2);
     console.log(`Querying ${query.length} entries...`);
-    const response = await fetch(this._api_endpoint, {
+    const response = await this._fetch_wrapper(this._api_endpoint, {
       method: "POST",
       body: JSON.stringify({
         method: "gdata",
@@ -127,14 +166,29 @@ export class Scraper {
         namespace: 1,
       }),
     });
-    if (response.status != 200) {
+    const ip_banned = is_ip_banned(await response.text());
+    if (response.status != 200 || ip_banned) {
       for (const entry of query) {
         this._syncdb.unresolve_query(entry[0]);
       }
+      if (ip_banned) {
+        console.log("IP Ban detected. Attempting to switch proxies.");
+        if (!this.switch_proxy()) {
+          //TODO: fix
+          const delay = 5000;
+          console.log(
+            `Unable to switch proxies. Sleeping for ${
+              delay * 10 / 1000
+            } seconds.`,
+          );
+          await sleep(delay * 10);
+        }
+      }
 
-      return Promise.reject(`Request failed with code ${response.status}`);
+      return Promise.reject(
+        `Request failed with code ${response.status}, ip ban status: ${ip_banned}`,
+      );
     }
-
     const resp_json = await response.json();
     for (const entry of resp_json["gmetadata"]) {
       const gid = entry["gid"];
