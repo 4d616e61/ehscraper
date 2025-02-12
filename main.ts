@@ -5,6 +5,7 @@ import { SyncDB } from "./sync/db.ts";
 import { TaskType } from "./sync/task.ts";
 import { sleep } from "./utils/utils.ts";
 import config from "./config.json" with { type: "json" };
+import { ProxyProvider, SimpleProxyProvider } from "./scrape/proxyprovider.ts";
 // Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
 if (import.meta.main) {
   const sdb: SyncDB = new SyncDB(
@@ -16,12 +17,19 @@ if (import.meta.main) {
     config.sync.max_ids_per_task,
   );
   const ddb: DataDB = new DataDB("./datadb.db");
-  const scraper_norm: Scraper = new Scraper(sdb, ddb, TaskType.NORM);
+  const scraper_norm: Scraper = new Scraper(
+    sdb,
+    ddb,
+    TaskType.NORM,
+    undefined,
+    new ProxyProvider(),
+  );
   console.log("Getting current max gid: ");
   const max_gid = await scraper_norm.get_max_gid();
   console.log(`GID: ${max_gid}`);
   sdb.max_id = max_gid;
   //const max_gid = 1000000;
+
   if (config.scrape.use_auth) {
     const scraper_authed: Scraper = new Scraper(
       sdb,
