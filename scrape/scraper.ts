@@ -34,7 +34,7 @@ export class Scraper {
     this._cookie = cookie;
     this._api_endpoint = api_endpoint;
     this._proxy_provider = proxy_provider;
-    // this._http_client = Deno.createHttpClient({});
+    this._http_client = Deno.createHttpClient({});
     // this._active_proxy = undefined;
     this.switch_proxy();
   }
@@ -202,8 +202,8 @@ export class Scraper {
       }
       this._datadb.add_api_resp(entry);
       this._syncdb.resolve_query(gid);
-      return true;
     }
+    return true;
   }
   public async pagination_loop(delay: number = 5000) {
     while (true) {
