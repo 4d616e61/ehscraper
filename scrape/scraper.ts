@@ -209,7 +209,12 @@ export class Scraper {
     while (true) {
       const task = this._syncdb.get_task(this._accepted_type);
       if (task === null) {
-        await sleep(1000);
+        console.log(
+          `No more pagination tasks. Retrying in ${
+            delay * 10 / 1000
+          } seconds...`,
+        );
+        await sleep(delay * 10);
         continue;
       }
       //TODO: unregister task on fail
