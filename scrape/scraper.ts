@@ -42,6 +42,7 @@ export class Scraper {
     const proxy = this._proxy_provider.get_proxy();
     if (proxy) {
       this._active_proxy = proxy;
+
       this._http_client = Deno.createHttpClient({ proxy: this._active_proxy });
       return true;
     }
@@ -113,6 +114,9 @@ export class Scraper {
         //console.log(response.status);  // e.g. 200
         if (is_ip_banned(res_text)) {
           console.log("IP Ban detected. Attempting to switch proxies.");
+          if (this._active_proxy) {
+            this._proxy_provider.invalidate_proxy(this._active_proxy);
+          }
           if (this.switch_proxy()) {
             continue;
           } else {
@@ -173,6 +177,9 @@ export class Scraper {
       }
       if (ip_banned) {
         console.log("IP Ban detected. Attempting to switch proxies.");
+        if (this._active_proxy) {
+          this._proxy_provider.invalidate_proxy(this._active_proxy);
+        }
         if (!this.switch_proxy()) {
           //TODO: fix
           const delay = 5000;

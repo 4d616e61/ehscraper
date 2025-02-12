@@ -1,5 +1,11 @@
+export interface BasicAuth {
+  username: string;
+  password: string;
+}
+
 export interface RequestProxy {
   url: string;
+  basicAuth?: BasicAuth;
 }
 
 export class ProxyProvider {
@@ -8,29 +14,39 @@ export class ProxyProvider {
   }
   public invalidate_proxy(proxy: RequestProxy) {
     proxy;
-    return null;
+    return;
   }
 }
 
 export class SimpleProxyProvider extends ProxyProvider {
   private _proxies: RequestProxy[];
-  constructor(proxies: string[]) {
+  private _allow_invalidate: boolean;
+  constructor(proxies: RequestProxy[], allow_invalidate: boolean = true) {
     super();
-    this._proxies = [];
-    for (const url of proxies) {
-      this._proxies.push({ url: url });
-    }
+    this._proxies = proxies;
+    this._allow_invalidate = allow_invalidate;
   }
   public override get_proxy(): RequestProxy {
     return this._proxies[Math.floor(Math.random() * this._proxies.length)];
   }
   public override invalidate_proxy(proxy_obj: RequestProxy) {
+    if (!this._allow_invalidate) {
+      return;
+    }
     const target_idx = this._proxies.findIndex((elem) => {
-      elem.url = proxy_obj.url;
+      if (elem.url !== proxy_obj.url) {
+        return false;
+      }
+      return true;
+
+      //   if (elem.basicAuth !== undefined) {
+      //     return elem.basicAuth?.username === elem.basicAuth?.username &&
+      //       elem.basicAuth?.password === proxy_obj.basicAuth?.password;
+      //   }
     });
-    if (target_idx != -1) {
+    if (target_idx !== -1) {
       this._proxies.splice(target_idx, 1);
     }
-    return null;
+    return;
   }
 }
