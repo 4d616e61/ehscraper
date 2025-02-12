@@ -34,8 +34,9 @@ export class Scraper {
     this._cookie = cookie;
     this._api_endpoint = api_endpoint;
     this._proxy_provider = proxy_provider;
-    this._http_client = Deno.createHttpClient({});
-    this._active_proxy = undefined;
+    // this._http_client = Deno.createHttpClient({});
+    // this._active_proxy = undefined;
+    this.switch_proxy();
   }
 
   private switch_proxy(): boolean {
