@@ -71,7 +71,7 @@ export class Scraper {
     const response = await this._fetch_wrapper(
       `https://e${
         do_exhentai ? "x" : "-"
-      }hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}&f_search=${search_string}`,
+      }hentai.org?next=${next}&f_sfl=on&f_sfu=on&f_sft=on&f_cats=0&advsearch=1&f_sh=${expunged_string}`,
       {
         headers: {
           cookie: cookie,
@@ -206,14 +206,20 @@ export class Scraper {
     return true;
   }
   public async pagination_loop(delay: number = 5000) {
+    let attempts = 0;
+    const max_attempts = 25;
     while (true) {
       const task = this._syncdb.get_task(this._accepted_type);
       if (task === null) {
+        attempts++;
         console.log(
           `No more pagination tasks. Retrying in ${
             delay * 10 / 1000
-          } seconds...`,
+          } seconds... (attempt ${attempts} of ${max_attempts})`,
         );
+        if(attempts >= max_attempts) {
+            return;
+        }
         await sleep(delay * 10);
         continue;
       }
@@ -230,6 +236,7 @@ export class Scraper {
           return false;
         },
       );
+      attempts = 0;
       if (success) {
         //passs
       } else {
@@ -239,14 +246,14 @@ export class Scraper {
   }
   public async query_loop(delay: number = 5000) {
     let attempts = 0;
-    const max_attempts = 10;
+    const max_attempts = 25;
     while (true) {
       false;
       const query = this._syncdb.get_queries();
       if (query.length === 0) {
         attempts++;
-        //if (attempts >= max_attempts) {
-        if (false) {
+        if (attempts >= max_attempts) {
+        //if (false) {
           console.log(
             `No query tasks after ${max_attempts} tries. Exiting query loop.`,
           );

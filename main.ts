@@ -22,24 +22,36 @@ if (import.meta.main) {
     ddb,
     TaskType.NORM,
     undefined,
-    new ProxyProvider(),
+    //new SimpleProxyProvider(config.scrape.proxies, false),
+  );
+  const scraper_api: Scraper = new Scraper(
+    sdb,
+    ddb,
+    TaskType.NORM,
+    undefined,
+    //new SimpleProxyProvider(config.scrape.proxies, false),
   );
   console.log("Getting current max gid: ");
   const max_gid = await scraper_norm.get_max_gid();
   console.log(`GID: ${max_gid}`);
   sdb.max_id = max_gid;
-  //const max_gid = 1000000;
 
-  if (config.scrape.use_auth) {
+  //placeholder for task declaration
+  let tsk = sleep(0);
+  await tsk;
+if (config.scrape.use_auth) {
     const scraper_authed: Scraper = new Scraper(
       sdb,
       ddb,
-      TaskType.EXH,
+      TaskType.ALL,
       config.scrape.cookies,
     );
-    scraper_authed.pagination_loop();
+    tsk = scraper_authed.pagination_loop(5000);
   }
-  scraper_norm.pagination_loop();
-  scraper_norm.query_loop();
-  await sleep(100000000);
+  //scraper_norm.pagination_loop(125);
+  //sync tasks
+  await scraper_api.query_loop(1000);
+  await tsk;
 }
+
+
