@@ -6,7 +6,7 @@ import { TaskType } from "./sync/task.ts";
 import { sleep } from "./utils/utils.ts";
 import config from "./config.json" with { type: "json" };
 import { ProxyProvider, SimpleProxyProvider } from "./scrape/proxyprovider.ts";
-// Learn more at https://docs.deno.com/runtime/manual/examples/module_metadata#concepts
+
 if (import.meta.main) {
   const sdb: SyncDB = new SyncDB(
     "./syncdb.db",
@@ -17,29 +17,37 @@ if (import.meta.main) {
     config.sync.max_ids_per_task,
   );
   const ddb: DataDB = new DataDB("./datadb.db");
-  const scraper_norm: Scraper = new Scraper(
+
+  const api_scraper: Scraper = new Scraper(
     sdb,
     ddb,
     TaskType.NORM,
     undefined,
-    new ProxyProvider(),
+    //new SimpleProxyProvider(config.scrape.proxies, false),
   );
-  console.log("Getting current max gid: ");
-  const max_gid = await scraper_norm.get_max_gid();
-  console.log(`GID: ${max_gid}`);
-  sdb.max_id = max_gid;
-  //const max_gid = 1000000;
-
-  if (config.scrape.use_auth) {
-    const scraper_authed: Scraper = new Scraper(
+  const is_authed = config.scrape.use_auth;
+  const page_scraper = is_authed
+    ? new Scraper(
       sdb,
       ddb,
-      TaskType.EXH,
+      TaskType.NORM,
+      undefined,
+    )
+    : new Scraper(
+      sdb,
+      ddb,
+      TaskType.ALL,
       config.scrape.cookies,
     );
-    scraper_authed.pagination_loop();
-  }
-  scraper_norm.pagination_loop();
-  scraper_norm.query_loop();
-  await sleep(100000000);
+  console.log("Getting current max gid: ");
+  const max_gid = await page_scraper.get_max_gid();
+  console.log(`GID: ${max_gid}`);
+  sdb.max_id = max_gid;
+
+  let tsk = page_scraper.pagination_loop(5000);
+
+  //scraper_norm.pagination_loop(125);
+  //sync tasks
+  await api_scraper.query_loop(1000);
+  await tsk;
 }
