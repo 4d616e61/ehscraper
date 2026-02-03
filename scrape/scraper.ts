@@ -217,6 +217,9 @@ export class Scraper {
             delay * 10 / 1000
           } seconds... (attempt ${attempts} of ${max_attempts})`,
         );
+        if (attempts >= max_attempts) {
+          return;
+        }
         await sleep(delay * 10);
         continue;
       }
@@ -235,7 +238,7 @@ export class Scraper {
       );
       attempts = 0;
       if (success) {
-        //pass
+        //passs
       } else {
         await sleep(delay * 10);
       }
@@ -249,8 +252,8 @@ export class Scraper {
       const query = this._syncdb.get_queries();
       if (query.length === 0) {
         attempts++;
-        //if (attempts >= max_attempts) {
-        if (false) {
+        if (attempts >= max_attempts) {
+          //if (false) {
           console.log(
             `No query tasks after ${max_attempts} tries. Exiting query loop.`,
           );
