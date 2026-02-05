@@ -37,8 +37,9 @@ export class DataDB {
       `
               CREATE TABLE IF NOT EXISTS paged_tags (
               gid                 INTEGER,
-              tags_solid         TEXT,
+              tags_solid          TEXT,
               tags_dashed         TEXT,
+              resp_ts             INTEGER,
               PRIMARY KEY(gid)
               );
             `,
@@ -49,6 +50,7 @@ export class DataDB {
               CREATE TABLE IF NOT EXISTS api_response (
               gid                 INTEGER,
               resp                TEXT,
+              resp_ts             INTEGER,
               PRIMARY KEY(gid)
               );
             `,

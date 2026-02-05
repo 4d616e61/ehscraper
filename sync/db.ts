@@ -46,6 +46,7 @@ export class SyncDB {
                 status_all      CHAR(1),
                 status_normal   CHAR(1),
                 status_exh      CHAR(1),
+                resp_ts         INTEGER,
                 UNIQUE(start, end)
 
               );
@@ -68,6 +69,7 @@ export class SyncDB {
               gid       INTEGER,
               token     TEXT,
               status    CHAR(1),
+              resp_ts INTEGER,
               PRIMARY KEY(gid)
               );
             `,
