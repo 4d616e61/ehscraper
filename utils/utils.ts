@@ -4,3 +4,7 @@ export function sleep(ms: number) {
 export async function sleep_await(ms: number) {
   await sleep(ms);
 }
+
+export function get_ts() {
+  return Date.now();
+}

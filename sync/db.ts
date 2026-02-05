@@ -2,6 +2,7 @@ import { assert } from "@std/assert/assert";
 import { Database } from "@db/sqlite";
 import { Task, task_type_to_name, TaskType } from "./task.ts";
 import { ParsedEntry } from "../scrape/parse.ts";
+import { get_ts } from "../utils/utils.ts";
 
 export const S_SYNCING = "S",
   S_FINISHED = "F",
@@ -221,25 +222,33 @@ export class SyncDB {
   public resolve_task(task: Task) {
     const task_name = task_type_to_name(task.task_type);
     this._db.prepare(
-      `UPDATE tasks SET ${task_name}='${S_FINISHED}' WHERE ${task_name}='${S_SYNCING}' AND start= (?) AND end=(?)`,
+      `UPDATE tasks 
+      SET ${task_name}='${S_FINISHED}', resp_ts=${get_ts()}
+      WHERE ${task_name}='${S_SYNCING}' AND start= (?) AND end=(?)`,
     )
       .run(task.start, task.end);
   }
   public unresolve_task(task: Task) {
     const task_name = task_type_to_name(task.task_type);
     this._db.prepare(
-      `UPDATE tasks SET ${task_name}='${S_UNSYNCED}' WHERE start= (?) AND end=(?)`,
+      `UPDATE tasks 
+      SET ${task_name}='${S_UNSYNCED}' 
+      WHERE start= (?) AND end=(?)`,
     )
       .run(task.start, task.end);
   }
   public resolve_query(gid: number) {
     this._db.prepare(
-      `UPDATE api_query SET status='${S_FINISHED}' WHERE status='${S_SYNCING}' AND gid = (?)`,
+      `UPDATE api_query 
+      SET status='${S_FINISHED}', resp_ts=${get_ts()}
+      WHERE status='${S_SYNCING}' AND gid = (?)`,
     ).run(gid);
   }
   public unresolve_query(gid: number) {
     this._db.prepare(
-      `UPDATE api_query SET status='${S_UNSYNCED}' WHERE gid = (?)`,
+      `UPDATE api_query 
+      SET status='${S_UNSYNCED}' 
+      WHERE gid = (?)`,
     ).run(gid);
   }
 }

@@ -1,6 +1,7 @@
 import { assert } from "@std/assert/assert";
 import { Database } from "@db/sqlite";
 import { ParsedEntry } from "../scrape/parse.ts";
+import { get_ts } from "../utils/utils.ts";
 
 export const S_SYNCING = "S",
   S_FINISHED = "F",
@@ -59,12 +60,13 @@ export class DataDB {
 
   public add_page_entry(entry: ParsedEntry) {
     this._db.prepare(
-      "INSERT OR REPLACE INTO paged_tags (gid, tags_solid, tags_dashed) VALUES (?, ?, ?)",
+      "INSERT OR REPLACE INTO paged_tags (gid, tags_solid, tags_dashed, resp_ts) VALUES (?, ?, ?)",
     )
       .run(
         entry.gid,
         JSON.stringify(entry.tags_solid),
         JSON.stringify(entry.tags_dashed),
+        get_ts(),
       );
 
     this._db.prepare(
@@ -77,8 +79,8 @@ export class DataDB {
   public add_api_resp(metadata_obj: any) {
     const gid = metadata_obj["gid"];
     this._db.prepare(
-      "INSERT OR REPLACE INTO api_response (gid, resp) VALUES (?, ?)",
+      "INSERT OR REPLACE INTO api_response (gid, resp, resp_ts) VALUES (?, ?)",
     )
-      .run(gid, JSON.stringify(metadata_obj));
+      .run(gid, JSON.stringify(metadata_obj), get_ts());
   }
 }
