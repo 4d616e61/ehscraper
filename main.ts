@@ -25,7 +25,7 @@ if (import.meta.main) {
     undefined,
     //new SimpleProxyProvider(config.scrape.proxies, false),
   );
-  const is_unauthed = config.scrape.use_auth;
+  const is_unauthed = !config.scrape.use_auth;
   const page_scraper = is_unauthed
     ? new Scraper(
       sdb,
