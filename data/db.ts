@@ -60,7 +60,7 @@ export class DataDB {
 
   public add_page_entry(entry: ParsedEntry) {
     this._db.prepare(
-      "INSERT OR REPLACE INTO paged_tags (gid, tags_solid, tags_dashed, resp_ts) VALUES (?, ?, ?)",
+      "INSERT OR REPLACE INTO paged_tags (gid, tags_solid, tags_dashed, resp_ts) VALUES (?, ?, ?, ?)",
     )
       .run(
         entry.gid,
@@ -79,7 +79,7 @@ export class DataDB {
   public add_api_resp(metadata_obj: any) {
     const gid = metadata_obj["gid"];
     this._db.prepare(
-      "INSERT OR REPLACE INTO api_response (gid, resp, resp_ts) VALUES (?, ?)",
+      "INSERT OR REPLACE INTO api_response (gid, resp, resp_ts) VALUES (?, ?. ?)",
     )
       .run(gid, JSON.stringify(metadata_obj), get_ts());
   }
